@@ -54,7 +54,7 @@ public class LoginEndpoint {
         }
 
         try {
-            User user = USER_REPO.getVeryfiedUser(username, password);
+            User user = USER_REPO.getVerifiedUser(username, password);
             String token = createToken(username, user.getRolesAsStrings());
             JsonObject responseJson = new JsonObject();
             responseJson.addProperty("username", username);

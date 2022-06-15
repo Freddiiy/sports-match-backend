@@ -8,6 +8,8 @@ import java.util.Set;
 import javax.persistence.*;
 
 import org.mindrot.jbcrypt.BCrypt;
+import repository.UserRepo;
+import utils.EMF_Creator;
 
 @Entity
 @Table(name = "USER")
@@ -15,16 +17,20 @@ public class User implements Serializable {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "USER_ID", unique = true)
     private Long id;
 
     private String username;
     private String password;
 
-    @ManyToMany(cascade = CascadeType.PERSIST)
-    private Set<Role> roleSet = new HashSet<>();
+    @ManyToMany(cascade = CascadeType.ALL)
+    @JoinTable(name = "USER_ROLE", joinColumns = {@JoinColumn(name = "USER_ID")},
+            inverseJoinColumns = {@JoinColumn(name = "ROLE_ID")})
+    private List<Role> roleList = new ArrayList<>();
 
-    @ManyToMany(cascade = CascadeType.PERSIST)
-    private Set<Team> teamSet = new HashSet<>();
+    @OneToMany(cascade = CascadeType.ALL)
+    private List<Match> matches = new ArrayList<>();
+
 
     public User() {}
 
@@ -34,10 +40,10 @@ public class User implements Serializable {
     }
 
     public List<String> getRolesAsStrings() {
-        if (roleSet.isEmpty()) return null;
+        if (roleList.isEmpty()) return null;
 
         List<String> rolesAsStrings = new ArrayList<>();
-        for (Role role : roleSet) {
+        for (Role role : roleList) {
             rolesAsStrings.add(role.getName());
         }
         return rolesAsStrings;
@@ -55,29 +61,27 @@ public class User implements Serializable {
         this.username = username;
     }
 
-    public Set<Role> getRoleSet() {
-        return roleSet;
+    public List<Role> getRoleSet() {
+        return this.roleList;
     }
 
-    public void setRoleSet(Set<Role> roles) {
-        this.roleSet = roles;
+    public void setRoleList(List<Role> roles) {
+        this.roleList = roles;
     }
 
-    public void addRole(String rolename) {
-        Role role = new Role(rolename);
-        this.roleSet.add(role);
+    public void addRole(String roleName) {
+        addRole(new Role(roleName));
     }
 
     public void addRole(Role role) {
-        this.roleSet.add(role);
+        UserRepo userRepo = UserRepo.getUserRepo(EMF_Creator.createEntityManagerFactory());
+
+        Role verifiedRole = userRepo.checkIfRoleExistThenCreateNew(role.getName());
+        this.roleList.add(verifiedRole);
     }
 
-    public Set<Team> getTeamSet() {
-        return teamSet;
-    }
-
-    public void setTeamSet(Set<Team> teamSet) {
-        this.teamSet = teamSet;
+    public void addMatch(Match match) {
+        this.matches.add(match);
     }
 
     public String getPassword() {

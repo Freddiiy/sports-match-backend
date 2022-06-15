@@ -1,6 +1,5 @@
 package rest;
 
-import auth.OAuth;
 import com.google.gson.Gson;
 import entities.User;
 import java.util.List;

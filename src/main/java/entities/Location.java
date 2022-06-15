@@ -11,5 +11,12 @@ public class Location {
 
     private String address;
     private String city;
+
+    public Location() {}
+
+    public Location(String address, String city) {
+        this.address = address;
+        this.city = city;
+    }
 }
 

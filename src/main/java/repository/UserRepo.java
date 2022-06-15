@@ -32,7 +32,7 @@ public class UserRepo {
         return instance;
     }
 
-    public User getVeryfiedUser(String username, String password) throws AuthenticationException {
+    public User getVerifiedUser(String username, String password) throws AuthenticationException {
         EntityManager em = emf.createEntityManager();
         User user;
         try {
@@ -49,13 +49,16 @@ public class UserRepo {
         return user;
     }
 
+    public User getVerifiedUser(User user) throws AuthenticationException {
+        return getVerifiedUser(user.getUsername(), user.getPassword());
+    }
+
     public User registerUser(String username, String password) {
         EntityManager em = emf.createEntityManager();
         User user = new User(username, password);
-        Role role = new Role(Role.RoleNames.USER);
-        Role newRole = checkIfRoleExistThenCreateNew(role.getName());
+        Role role = checkIfRoleExistThenCreateNew(Role.RoleNames.USER);
 
-        user.addRole(newRole);
+        user.addRole(role);
         try {
             int validate;
             TypedQuery<User> query = em.createQuery("select u from User u where u.username = :username", User.class);
@@ -80,14 +83,15 @@ public class UserRepo {
         return user;
     }
 
-    private Role getRole(String roleName) throws NotFoundException {
+    public Role getRole(String roleName) throws NotFoundException {
         EntityManager em = emf.createEntityManager();
         Role role;
 
         try {
             TypedQuery<Role> query = em.createQuery("select r from Role r where r.name = :roleName", Role.class);
             query.setParameter("roleName", roleName);
-            role = query.getSingleResult();
+            role = query.getResultList().get(0);
+            System.out.println("getRole " + role.getId());
         } finally {
             em.close();
         }
@@ -97,7 +101,7 @@ public class UserRepo {
         return role;
     }
 
-    private boolean roleExists(Role role) {
+    public boolean roleExists(Role role) {
         EntityManager em = emf.createEntityManager();
         int count;
         try {
@@ -110,7 +114,7 @@ public class UserRepo {
         return count > 0;
     }
 
-    private Role checkIfRoleExistThenCreateNew(String roleName) {
+    public Role checkIfRoleExistThenCreateNew(String roleName) {
         EntityManager em = emf.createEntityManager();
         Role checkRole = new Role(roleName);
 
@@ -118,6 +122,7 @@ public class UserRepo {
             return getRole(roleName);
         }
 
+        /*
         try {
             em.getTransaction().begin();
             em.persist(checkRole);
@@ -125,6 +130,8 @@ public class UserRepo {
         } finally {
             em.close();
         }
+         */
+
         return checkRole;
     }
 }
