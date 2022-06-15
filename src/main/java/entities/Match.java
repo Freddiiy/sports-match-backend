@@ -22,6 +22,18 @@ public class Match {
     @OneToOne
     private Location location;
 
+    public Match() {}
+
+    public Match(String matchName, String homeTeam, String awayTeam, User judge, String sportsType, boolean inDoors, Location location) {
+        this.matchName = matchName;
+        this.homeTeam = homeTeam;
+        this.awayTeam = awayTeam;
+        this.judge = judge;
+        this.sportsType = sportsType;
+        this.inDoors = inDoors;
+        this.location = location;
+    }
+
     public User getJudge() {
         return judge;
     }
