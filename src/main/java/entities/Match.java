@@ -7,7 +7,7 @@ import javax.persistence.*;
 public class Match {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.AUTO)
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
     private String matchName;
@@ -15,7 +15,6 @@ public class Match {
     private String awayTeam;
 
     @ManyToOne
-    @JoinColumn(name = "judge_id")
     private User judge;
     private String sportsType;
     private boolean inDoors;
