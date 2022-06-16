@@ -57,10 +57,14 @@ public class MatchRepo {
     }
 
     public Match getMatchById(Long id) {
+        System.out.println(id);
         EntityManager em = emf.createEntityManager();
         Match match;
         try {
-            match = em.find(Match.class, id);
+            TypedQuery<Match> query = em.createQuery("select m from Match m where m.id = :id", Match.class);
+            query.setParameter("id", id);
+
+            match = query.getSingleResult();
         } finally {
             em.close();
         }
@@ -85,10 +89,8 @@ public class MatchRepo {
         }
     }
 
-    public MatchDTO createMatch(MatchDTO matchDTO) {
+    public MatchDTO createMatch(Match match) {
         EntityManager em = emf.createEntityManager();
-
-        Match match = new Match(matchDTO);
 
         try {
             em.getTransaction().begin();
@@ -100,7 +102,7 @@ public class MatchRepo {
         return new MatchDTO(match);
     }
 
-    private Match addUserToHomeTeam(Match match, User user) {
+    public Match addUserToHomeTeam(Match match, User user) {
         EntityManager em = emf.createEntityManager();
         match.addUserToHomeTeam(user);;
 
@@ -115,8 +117,40 @@ public class MatchRepo {
         return match;
     }
 
-    private Match addUserToAwayTeam(Match match, User user) {
+    public Match addUserToHomeTeam(Long id, User user) {
         EntityManager em = emf.createEntityManager();
+        Match match = getMatchById(id);
+        match.addUserToHomeTeam(user);;
+
+        try {
+            em.getTransaction().begin();
+            em.merge(match);
+            em.getTransaction().commit();
+        } finally {
+            em.close();
+        }
+
+        return match;
+    }
+
+    public Match addUserToAwayTeam(Match match, User user) {
+        EntityManager em = emf.createEntityManager();
+        match.addUserToAwayTeam(user);;
+
+        try {
+            em.getTransaction().begin();
+            em.merge(match);
+            em.getTransaction().commit();
+        } finally {
+            em.close();
+        }
+
+        return match;
+    }
+
+    public Match addUserToAwayTeam(Long id, User user) {
+        EntityManager em = emf.createEntityManager();
+        Match match = getMatchById(id);
         match.addUserToAwayTeam(user);;
 
         try {
@@ -146,9 +180,9 @@ public class MatchRepo {
         match.addUserToHomeTeam(spiller1);
         match.addUserToAwayTeam(spiller2);
         match.addUserToHomeTeam(spiller3);
-        MatchDTO newMatch = matchRepo.createMatch(new MatchDTO(match));
+        //MatchDTO newMatch = matchRepo.createMatch(new MatchDTO(match));
 
-        System.out.println(newMatch.getMatchName() + " " + newMatch.getHomeTeam().get(0).getUsername());
+        //System.out.println(newMatch.getMatchName() + " " + newMatch.getHomeTeam().get(0).getUsername());
 
         List<Match> matchList = matchRepo.getMatchesByUser(spiller1);
 

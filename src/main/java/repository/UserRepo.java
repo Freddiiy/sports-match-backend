@@ -1,5 +1,6 @@
 package repository;
 
+import dtos.UserDTO;
 import entities.Role;
 import entities.User;
 
@@ -86,6 +87,22 @@ public class UserRepo {
             } finally {
                 em.close();
             }
+        }
+
+        return user;
+    }
+
+    public User getUser(String username) {
+        EntityManager em = emf.createEntityManager();
+        User user;
+
+        try {
+            TypedQuery<User> query = em.createQuery("select u from User u where u.username = :username", User.class);
+            query.setParameter("username", username);
+
+            user = query.getSingleResult();
+        } finally {
+            em.close();
         }
 
         return user;

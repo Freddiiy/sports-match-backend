@@ -2,16 +2,19 @@ package rest;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
 import dtos.MatchDTO;
+import dtos.UserDTO;
 import entities.Match;
 import entities.User;
 import errorhandling.API_Exception;
 import org.glassfish.jersey.server.ResourceConfig;
 import repository.MatchRepo;
+import repository.UserRepo;
 import utils.EMF_Creator;
 
 import javax.persistence.EntityManagerFactory;
-import javax.print.attribute.standard.Media;
 import javax.ws.rs.*;
 import javax.ws.rs.core.*;
 import java.util.List;
@@ -20,6 +23,7 @@ import java.util.List;
 public class MatchResource {
     private static final EntityManagerFactory EMF = EMF_Creator.createEntityManagerFactory();
     private final MatchRepo matchRepo = MatchRepo.getMatchRepo(EMF);
+    private final UserRepo userRepo = UserRepo.getUserRepo(EMF);
     private static final Gson GSON = new GsonBuilder().setPrettyPrinting().create();
 
     @Context
@@ -77,8 +81,56 @@ public class MatchResource {
     @Produces(MediaType.APPLICATION_JSON)
     @Path("/create")
     public Response addMatch(String jsonString) {
-        MatchDTO match = GSON.fromJson(jsonString, MatchDTO.class);
+        Match match = GSON.fromJson(jsonString, Match.class);
         matchRepo.createMatch(match);
+
+        return Response
+                .ok()
+                .build();
+    }
+
+    @POST()
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Produces(MediaType.APPLICATION_JSON)
+    @Path("/add-to-home")
+    public Response addToHome(String jsonString) throws API_Exception {
+        String username;
+        Long matchId;
+        try {
+            JsonObject jsonObject = JsonParser.parseString(jsonString).getAsJsonObject();
+            username = jsonObject.get("username").getAsString();
+            matchId = Long.parseLong(jsonObject.get("matchId").getAsString());
+
+            System.out.println(username + " " + matchId);
+        } catch (Exception e) {
+            throw new API_Exception("Malformed JSON Suplied",400,e);
+        }
+        User user = userRepo.getUser(username);
+        matchRepo.addUserToHomeTeam(matchId, user);
+
+        return Response
+                .ok()
+                .build();
+    }
+
+    @POST()
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Produces(MediaType.APPLICATION_JSON)
+    @Path("/add-to-away")
+    public Response addToAway(String jsonString) throws API_Exception {
+        String username;
+        Long matchId;
+        try {
+            JsonObject jsonObject = JsonParser.parseString(jsonString).getAsJsonObject();
+            username = jsonObject.get("username").getAsString();
+            matchId = Long.parseLong(jsonObject.get("matchId").getAsString());
+
+            System.out.println(username + " " + matchId);
+        } catch (Exception e) {
+            throw new API_Exception("Malformed JSON Suplied",400,e);
+        }
+        User user = userRepo.getUser(username);
+        matchRepo.addUserToAwayTeam(matchId, user);
 
         return Response
                 .ok()
