@@ -1,10 +1,12 @@
 package repository;
 
+import dtos.MatchDTO;
 import entities.*;
 import errorhandling.NotFoundException;
 import security.errorhandling.AuthenticationException;
 import utils.EMF_Creator;
 
+import javax.enterprise.inject.Typed;
 import javax.persistence.EntityManager;
 import javax.persistence.EntityManagerFactory;
 import javax.persistence.TypedQuery;
@@ -68,8 +70,25 @@ public class MatchRepo {
         return match;
     }
 
-    public Match createMatch(Match match) {
+    public List<MatchDTO> getMatchesByLocation(String location) {
         EntityManager em = emf.createEntityManager();
+
+        try {
+            TypedQuery<Match> query =
+                    em.createQuery("select m from Match m inner join Location l " +
+                            "where l.address like :location or l.city like :location", Match.class);
+            query.setParameter("location", "%"+location+"%");
+            List<Match> matches = query.getResultList();
+            return MatchDTO.convertToDTO(matches);
+        } finally {
+            em.close();
+        }
+    }
+
+    public MatchDTO createMatch(MatchDTO matchDTO) {
+        EntityManager em = emf.createEntityManager();
+
+        Match match = new Match(matchDTO);
 
         try {
             em.getTransaction().begin();
@@ -78,6 +97,36 @@ public class MatchRepo {
         } finally {
             em.close();
         }
+        return new MatchDTO(match);
+    }
+
+    private Match addUserToHomeTeam(Match match, User user) {
+        EntityManager em = emf.createEntityManager();
+        match.addUserToHomeTeam(user);;
+
+        try {
+            em.getTransaction().begin();
+            em.merge(match);
+            em.getTransaction().commit();
+        } finally {
+            em.close();
+        }
+
+        return match;
+    }
+
+    private Match addUserToAwayTeam(Match match, User user) {
+        EntityManager em = emf.createEntityManager();
+        match.addUserToAwayTeam(user);;
+
+        try {
+            em.getTransaction().begin();
+            em.merge(match);
+            em.getTransaction().commit();
+        } finally {
+            em.close();
+        }
+
         return match;
     }
 
@@ -90,17 +139,26 @@ public class MatchRepo {
         
         User spiller1 = new User("spiller1", "password1");
         User spiller2 = new User("spiller2", "password2");
+        User spiller3 = new User("spiller3", "password3");
+        User spiller4 = new User("spiller4", "password4");
 
         Match match = new Match("4b tennis ting", "Tennis", false, location);
         match.addUserToHomeTeam(spiller1);
         match.addUserToAwayTeam(spiller2);
-        Match newMatch = matchRepo.createMatch(match);
+        match.addUserToHomeTeam(spiller3);
+        MatchDTO newMatch = matchRepo.createMatch(new MatchDTO(match));
 
         System.out.println(newMatch.getMatchName() + " " + newMatch.getHomeTeam().get(0).getUsername());
 
         List<Match> matchList = matchRepo.getMatchesByUser(spiller1);
 
         for (Match match1 : matchList) {
+            System.out.println(match1.getMatchName());
+        }
+
+        List<Match> matchList2 = matchRepo.getMatchesByUser(spiller3);
+
+        for (Match match1 : matchList2) {
             System.out.println(match1.getMatchName());
         }
     }

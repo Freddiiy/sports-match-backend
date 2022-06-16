@@ -57,13 +57,17 @@ public class UserRepo {
         EntityManager em = emf.createEntityManager();
         User user = new User(username, password);
         Role role = checkIfRoleExistThenCreateNew(Role.RoleNames.USER);
+        int validate = 0;
+
+        System.out.println(validate);
 
         user.addRole(role);
         try {
-            int validate;
             TypedQuery<User> query = em.createQuery("select u from User u where u.username = :username", User.class);
             query.setParameter("username", user.getUsername());
             validate = query.getResultList().size();
+
+            System.out.println(validate);
 
             if (validate > 0) {
                 throw new AuthenticationException("User already exists");
@@ -72,12 +76,16 @@ public class UserRepo {
             e.printStackTrace();
         }
 
-        try {
-            em.getTransaction().begin();
-            em.persist(user);
-            em.getTransaction().commit();
-        } finally {
-            em.close();
+        System.out.println(validate);
+        if (validate <= 0) {
+            System.out.println("Wow im insdie");
+             try {
+                em.getTransaction().begin();
+                em.persist(user);
+                em.getTransaction().commit();
+            } finally {
+                em.close();
+            }
         }
 
         return user;

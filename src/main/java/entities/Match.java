@@ -1,5 +1,7 @@
 package entities;
 
+import dtos.MatchDTO;
+
 import javax.persistence.*;
 import java.util.ArrayList;
 import java.util.List;
@@ -15,12 +17,12 @@ public class Match {
     private String matchName;
 
     @ManyToMany(cascade = CascadeType.ALL)
-    @JoinTable(name = "USER_MATCH", joinColumns = {@JoinColumn(name = "MATCH_ID")},
+    @JoinTable(name = "USER_HOME_MATCH", joinColumns = {@JoinColumn(name = "MATCH_ID")},
             inverseJoinColumns = {@JoinColumn(name = "USER_ID")})
     private List<User> homeTeam = new ArrayList<>();
 
     @ManyToMany(cascade = CascadeType.ALL)
-    @JoinTable(name = "USER_MATCH", joinColumns = {@JoinColumn(name = "MATCH_ID")},
+    @JoinTable(name = "USER_AWAY_MATCH", joinColumns = {@JoinColumn(name = "MATCH_ID")},
             inverseJoinColumns = {@JoinColumn(name = "USER_ID")})
     private List<User> awayTeam = new ArrayList<>();
 
@@ -58,6 +60,16 @@ public class Match {
         this.sportsType = sportsType;
         this.inDoors = inDoors;
         this.location = location;
+    }
+
+    public Match(MatchDTO matchDTO) {
+        this.matchName = matchDTO.getMatchName();
+        this.homeTeam = User.convertToEntity(matchDTO.getHomeTeam());
+        this.awayTeam = User.convertToEntity(matchDTO.getAwayTeam());
+        this.judge = new User(matchDTO.getJudge());
+        this.sportsType = matchDTO.getSportType();
+        this.inDoors = matchDTO.isInDoors();
+        this.location = new Location(matchDTO.getLocation());
     }
 
     public Long getId() {
@@ -126,11 +138,18 @@ public class Match {
 
     public void addUserToHomeTeam(User user) {
         this.homeTeam.add(user);
-        user.addMatch(this);
     }
 
     public void addUserToAwayTeam(User user) {
         this.awayTeam.add(user);
-        user.addMatch(this);
+    }
+
+    public static List<Match> convertToEntity(List<MatchDTO> dtos) {
+        List<Match> matches = new ArrayList<>();
+        for (MatchDTO dto : dtos) {
+            matches.add(new Match(dto));
+        }
+
+        return matches;
     }
 }

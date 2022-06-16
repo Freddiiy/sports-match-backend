@@ -2,11 +2,12 @@ package entities;
 
 import java.io.Serializable;
 import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
 import javax.persistence.*;
 
+import dtos.MatchDTO;
+import dtos.RoleDTO;
+import dtos.UserDTO;
 import org.mindrot.jbcrypt.BCrypt;
 import repository.UserRepo;
 import utils.EMF_Creator;
@@ -28,8 +29,11 @@ public class User implements Serializable {
             inverseJoinColumns = {@JoinColumn(name = "ROLE_ID")})
     private List<Role> roleList = new ArrayList<>();
 
-    @OneToMany(cascade = CascadeType.ALL)
-    private List<Match> matches = new ArrayList<>();
+    @ManyToMany(cascade = CascadeType.ALL)
+    private List<Match> homeMatches = new ArrayList<>();
+
+    @ManyToMany(cascade = CascadeType.ALL)
+    private List<Match> awayMatches = new ArrayList<>();
 
 
     public User() {}
@@ -37,6 +41,13 @@ public class User implements Serializable {
     public User(String username, String password) {
         this.username = username;
         this.password = BCrypt.hashpw(password, BCrypt.gensalt());
+    }
+
+    public User(UserDTO userDTO) {
+        this.username = userDTO.getUsername();
+        this.roleList = Role.convertToEntity(userDTO.getRoles());
+        this.awayMatches = Match.convertToEntity(userDTO.getAwayMatches());
+        this.homeMatches = Match.convertToEntity(userDTO.getHomeMatches());
     }
 
     public List<String> getRolesAsStrings() {
@@ -61,7 +72,7 @@ public class User implements Serializable {
         this.username = username;
     }
 
-    public List<Role> getRoleSet() {
+    public List<Role> getRoleList() {
         return this.roleList;
     }
 
@@ -80,8 +91,20 @@ public class User implements Serializable {
         this.roleList.add(verifiedRole);
     }
 
-    public void addMatch(Match match) {
-        this.matches.add(match);
+    public List<Match> getHomeMatches() {
+        return homeMatches;
+    }
+
+    public List<Match> getAwayMatches() {
+        return awayMatches;
+    }
+
+    public void addToHomeMatch(Match match) {
+        this.homeMatches.add(match);
+    }
+
+    public void addToAwayMatch(Match match) {
+        this.awayMatches.add(match);
     }
 
     public String getPassword() {
@@ -90,5 +113,14 @@ public class User implements Serializable {
 
     public void setPassword(String pw) {
         this.password = pw;
+    }
+
+    public static List<User> convertToEntity(List<UserDTO> dtos) {
+        List<User> matches = new ArrayList<>();
+        for (UserDTO dto : dtos) {
+            matches.add(new User(dto));
+        }
+
+        return matches;
     }
 }

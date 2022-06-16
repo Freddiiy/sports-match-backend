@@ -1,6 +1,10 @@
 package entities;
 
+import dtos.MatchDTO;
+import dtos.RoleDTO;
+
 import java.io.Serializable;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 import javax.persistence.*;
@@ -36,6 +40,11 @@ public class Role implements Serializable {
         this.name = name;
     }
 
+    public Role(RoleDTO roleDTO) {
+        this.name = roleDTO.getName();
+        this.userList = User.convertToEntity(roleDTO.getUserDTOList());
+    }
+
     public Long getId() {
         return id;
     }
@@ -55,5 +64,14 @@ public class Role implements Serializable {
     @Override
     public String toString() {
         return this.name;
+    }
+
+    public static List<Role> convertToEntity(List<RoleDTO> dtos) {
+        List<Role> matches = new ArrayList<>();
+        for (RoleDTO dto : dtos) {
+            matches.add(new Role(dto));
+        }
+
+        return matches;
     }
 }
